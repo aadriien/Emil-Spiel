@@ -9,7 +9,8 @@ using namespace std;
 
 const int NUM_QUESTIONS = 5;
 const int NUM_OPTIONS = 4;
-const int NUM_TEAMS = 2;
+
+static int NUM_TEAMS;
 
 
 struct FullQuestion {
@@ -47,9 +48,9 @@ string tracks = "-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-";
 struct FullQuestion allQuestions[NUM_QUESTIONS];
 struct FullQuestion curr;
 
-vector<int> available = {0, 1, 2, 3, 4}; /* questions not yet asked */
+vector<int> available = {0, 1, 2, 3, 4}; // questions not yet asked
 
-struct Team allTeams[NUM_TEAMS];
+vector <struct Team> allTeams; // hold all teams
 
 
 void drawTrain1(int cycles);
@@ -73,8 +74,25 @@ int main()
                 cout << "\n(ja/nein): ";
                 cin >> response;
         }
-        cout << "\n\n";       
+        cout << "\n\n";      
 
+        // determine number of teams playing, between 1-5
+        cout << "Wie viele Mannschaften spielen?: ";
+        cin >> response;
+
+        while (stoi(response) < 1 || stoi(response) > 5) {
+                cout << "\n(bitte zwischen 1-5): ";
+                cin >> response;
+        } 
+
+        NUM_TEAMS = stoi(response);
+        for (int i = 0; i < NUM_TEAMS; i++) {
+                struct Team newTeam;
+                allTeams.push_back(newTeam);
+        }
+        cout << "\n\n"; 
+
+        // get team names
         for (int i = 0; i < NUM_TEAMS; i++) {
                 cout << "Gruppe " << i + 1 << ", wie heißt deine Mannschaft?: ";
                 cin >> allTeams[i].name;
@@ -139,7 +157,7 @@ void drawTrain1(int cycles)
 
 void drawTrain2()
 {
-        /* get midway positioning on tracks for large train */
+        // get midway positioning on tracks for large train
         int partLength = (tracks.length() - train2[3].length()) / 2;
         int spaceCount = 0;
         string spaces = " ";
@@ -241,15 +259,31 @@ void checkAnswers()
 
 void getWinner()
 {
+        bool allZero = true;
+        int maxScore = -1;
         int winnerIndex = -1;
         vector<string> tiedWinners;
 
+        // confirm that at least 1 team scored points
+        for (int i = 0; i < NUM_TEAMS; i++) {
+                if (allTeams[i].points > 0) {
+                        allZero = false;
+                        break;
+                }
+        }
+        if (allZero) {
+                cout << "Niemand hat das Spiel gewonnen :(" << endl;
+                return;
+        }
+
         // tally points & identify any ties
         for (int i = 0; i < NUM_TEAMS; i++) {
-                if (allTeams[i].points > allTeams[winnerIndex].points) {
+                if (allTeams[i].points > maxScore) {
                         winnerIndex = i;
+                        maxScore = allTeams[i].points;
                         tiedWinners.clear();
-                } else if (allTeams[i].points == allTeams[winnerIndex].points) {
+
+                } else if (allTeams[i].points == maxScore) {
                         tiedWinners.push_back(allTeams[i].name);
                 }
         }
@@ -284,8 +318,8 @@ void prepQuestions()
         q1.question = "Als Emil Herr Kastner trifft, Emil sagt 'Kennen Sie mich denn nicht mehr?'. Warum fragt er das?";
         q1.answers[0] = "Herr Kastner hat gestern Emils Strassenbahnbillett bezahlt.";
         q1.answers[1] = "Herr Kastner ist sehr beruhmt.";
-        q1.answers[2] = "Herr Kastner ist der gemeine Schaffner von Zug.";
-        q1.answers[3] = "Herr Kastner hat die Droschke gefahrt.";
+        q1.answers[2] = "Herr Kastner ist der gemeine Schaffner aus dem Zug.";
+        q1.answers[3] = "Herr Kastner hat die Droschke gefahren.";
 
         struct FullQuestion q2;
         q2.question = "Wer isst NICHT den Kuchen in der Konditorei?";
