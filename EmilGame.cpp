@@ -17,7 +17,6 @@ struct FullQuestion {
         string answers[NUM_OPTIONS]; // elem 0 == correct, all others incorrect
         
         char correctOption;
-        bool visited = false;
 };
 
 
@@ -35,17 +34,20 @@ string train1[4] = {
 };
 
 string train2[5] = {
-        "  _____                . . . . . o o o o o\n",
-        "__|[_]|__ ___________ _______    ____      o\n",
-        "|[] [] []| [] [] [] [] [_____(__  ][]]_n_n__][.\n",
+        "    _____                . . . . . o o o o o\n",
+        "  __|[_]|__ ___________ _______    ____      o\n",
+        " |[] [] []| [] [] [] [] [_____(__  ][]]_n_n__][.\n",
         "_|________|_[_________]_[________]_|__|________)<\n",
-        "oo    oo 'oo      oo ' oo    oo 'oo 0000---oo\n"
+        "  oo    oo 'oo      oo ' oo    oo 'oo 0000---oo\n"
 };
 
 string tracks = "-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-";
 
 
 struct FullQuestion allQuestions[NUM_QUESTIONS];
+struct FullQuestion curr;
+
+vector<int> available = {0, 1, 2, 3, 4}; /* questions not yet asked */
 
 struct Team allTeams[NUM_TEAMS];
 
@@ -53,9 +55,9 @@ struct Team allTeams[NUM_TEAMS];
 void drawTrain1(int cycles);
 void drawTrain2();
 int randomIndex();
-struct FullQuestion formatQuestion(struct FullQuestion curr);
-bool isCorrect(struct FullQuestion curr, char answer);
-void checkAnswers(struct FullQuestion curr);
+void formatQuestion();
+bool isCorrect(char answer);
+void checkAnswers();
 void getWinner();
 void prepQuestions();
 void cycleQuestions();
@@ -74,7 +76,7 @@ int main()
         cout << "\n\n";       
 
         for (int i = 0; i < NUM_TEAMS; i++) {
-                cout << "Gruppe " << i << ", wie heißt deine Mannschaft?: ";
+                cout << "Gruppe " << i + 1 << ", wie heißt deine Mannschaft?: ";
                 cin >> allTeams[i].name;
         }
 
@@ -98,14 +100,8 @@ void cycleQuestions()
         int numCycles = 0;
 
         while (numCycles < NUM_QUESTIONS) {
-                struct FullQuestion curr;
-
                 // get a question we haven't yet seen
                 curr = allQuestions[randomIndex()];
-                while (curr.visited) {
-                        curr = allQuestions[randomIndex()];
-                }
-                curr.visited = true;
 
                 cout << "--------------------\n" << endl;
 
@@ -114,8 +110,8 @@ void cycleQuestions()
 
                 cout << "FRAGE " << numCycles + 1 << ":\n\n";
 
-                struct FullQuestion editCurr = formatQuestion(curr);
-                checkAnswers(editCurr);
+                formatQuestion();
+                checkAnswers();
 
                 numCycles++;
         }
@@ -124,7 +120,7 @@ void cycleQuestions()
 
 void drawTrain1(int cycles) 
 {
-        int partLength = tracks.length() / 5;
+        int partLength = (tracks.length() - 1) / 5;
         int spaceCount = 0;
         string spaces = " ";
 
@@ -163,17 +159,23 @@ void drawTrain2()
 
 int randomIndex() 
 {
-        return rand() % NUM_QUESTIONS;
+        int result = -1;
+        int ranIndex = rand() % available.size();
+        result = available.at(ranIndex);
+
+        available.erase(available.begin() + ranIndex);
+        
+        return result;
 }
 
 
-struct FullQuestion formatQuestion(struct FullQuestion curr) 
+void formatQuestion() 
 {
         cout << curr.question << endl;
         cout << endl;
 
         char options[NUM_OPTIONS] = {'A', 'B', 'C', 'D'};
-        bool visited[NUM_OPTIONS] = {false};
+        bool visitedO[NUM_OPTIONS] = {false};
 
         int optionIndex = -1;
         
@@ -182,10 +184,10 @@ struct FullQuestion formatQuestion(struct FullQuestion curr)
 
                 // randomize presentation of answer options
                 optionIndex = rand() % NUM_OPTIONS;
-                while (visited[optionIndex]) {
+                while (visitedO[optionIndex]) {
                         optionIndex = rand() % NUM_OPTIONS;
                 }
-                visited[optionIndex] = true;
+                visitedO[optionIndex] = true;
 
                 if (optionIndex == 0) {
                         curr.correctOption = options[i];
@@ -194,12 +196,10 @@ struct FullQuestion formatQuestion(struct FullQuestion curr)
                 cout << curr.answers[optionIndex] << endl;
         }
         cout << endl;
-
-        return curr;
 }
 
 
-bool isCorrect(struct FullQuestion curr, char answer)
+bool isCorrect(char answer)
 {
         if (toupper(answer) == curr.correctOption) {
                 return true;
@@ -208,7 +208,7 @@ bool isCorrect(struct FullQuestion curr, char answer)
 }
 
 
-void checkAnswers(struct FullQuestion curr)
+void checkAnswers()
 {
         char teamAnswer[NUM_TEAMS];
 
@@ -227,7 +227,7 @@ void checkAnswers(struct FullQuestion curr)
                 cout << "Mannschaft *" << allTeams[i].name << "*, ";
                 string outcome = "das ist ... FALSCH!"; // default message
 
-                if (isCorrect(curr, teamAnswer[i])) {
+                if (isCorrect(teamAnswer[i])) {
                         outcome = "bist du ... RICHTIG!";
                         allTeams[i].points++; // increment points
                 } 
@@ -266,7 +266,7 @@ void getWinner()
                 
         } else { // or just 1 winner
                 cout << "Die Mannschaft *" << allTeams[winnerIndex].name;
-                cout << "* hat das Spiel gewonnen!" << endl;
+                cout << "* hat das Spiel gewonnen!\n" << endl;
         }
 }
 
