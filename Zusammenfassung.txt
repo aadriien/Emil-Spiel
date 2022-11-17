@@ -56,3 +56,4 @@ Ich habe ein Videospiel gemacht, und jetzt werden wir dieses Spiel spielen.
 (Es ist ein sehr einfaches Spiel.)
 
 OK, wie viele Mannschaften wollen wir?
+
